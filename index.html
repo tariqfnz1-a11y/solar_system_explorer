@@ -1,1 +1,1469 @@
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Solar System Explorer — Grade 6 Interactive Space Lab</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap');
 
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background-color: #f1f5f9;
+      color: #0f172a;
+    }
+
+    h1, h2, h3, .font-display {
+      font-family: 'Fredoka', 'Inter', sans-serif;
+    }
+
+    /* Custom slider styling */
+    input[type="range"] {
+      -webkit-appearance: none;
+      appearance: none;
+      height: 8px;
+      border-radius: 999px;
+      background: #cbd5e1;
+      outline: none;
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: #4f46e5;
+      cursor: pointer;
+      border: 3px solid #ffffff;
+      box-shadow: 0 2px 6px rgba(15, 23, 42, 0.25);
+      transition: transform 0.15s ease;
+    }
+    input[type="range"]::-webkit-slider-thumb:hover {
+      transform: scale(1.12);
+    }
+
+    .canvas-wrapper {
+      position: relative;
+      width: 100%;
+      height: 410px;
+      background-color: #060B19;
+      border-radius: 1.25rem;
+      overflow: hidden;
+    }
+    @media (min-width: 640px) {
+      .canvas-wrapper {
+        height: 480px;
+      }
+    }
+    @media (min-width: 1024px) {
+      .canvas-wrapper {
+        height: 520px;
+      }
+    }
+
+    canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+      cursor: pointer;
+    }
+
+    /* Smooth scrollbar for horizontal planet pill bar on small screens */
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+  </style>
+</head>
+<body class="min-h-screen pb-16">
+  <!-- Top Cosmic Header Banner -->
+  <header class="bg-gradient-to-r from-[#060B19] via-indigo-950 to-[#0f172a] text-white border-b border-indigo-500/30 shadow-lg">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 py-5 sm:py-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div class="space-y-1">
+        <div class="inline-flex items-center gap-2 bg-indigo-500/20 border border-indigo-400/30 text-indigo-200 text-xs font-bold px-3 py-1 rounded-full">
+          <span>🚀 Grade 6 Astronomy &amp; Space Science</span>
+          <span>&bull;</span>
+          <span>Interactive Lab</span>
+        </div>
+        <h1 class="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight text-white">
+          Solar System Explorer — Grade 6 Interactive Space Lab
+        </h1>
+        <p class="text-xs sm:text-sm text-slate-300 max-w-2xl">
+          Watch all 8 planets orbit the Sun in real time, zoom into the rocky inner neighborhood, inspect planetary stats, and test your cosmic knowledge!
+        </p>
+      </div>
+
+      <!-- Quick Jump Links -->
+      <nav class="flex flex-wrap gap-2 text-xs font-bold">
+        <a href="#sim-section" class="px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white transition shadow">
+          🪐 Orbit Lab
+        </a>
+        <a href="#vocab-section" class="px-3.5 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-slate-100 border border-white/15 transition">
+          📖 Space Terms
+        </a>
+        <a href="#table-section" class="px-3.5 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-slate-100 border border-white/15 transition">
+          📊 Planet Data
+        </a>
+        <a href="#quiz-section" class="px-3.5 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 transition shadow">
+          🏆 Space Quiz
+        </a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 pt-6 sm:pt-8 space-y-10">
+    <!-- =========================================================
+         SECTION 1: INTERACTIVE SOLAR SYSTEM SIMULATION LAB
+         ========================================================= -->
+    <section id="sim-section" class="bg-white rounded-3xl p-5 sm:p-7 shadow-md border border-slate-200 space-y-5">
+      <!-- Section Header & View Mode Switcher -->
+      <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b border-slate-100 pb-4">
+        <div>
+          <h2 class="text-xl sm:text-2xl font-bold text-slate-900 flex items-center gap-2">
+            <span>🔭</span> Interactive Orbital Simulation
+          </h2>
+          <p class="text-xs sm:text-sm text-slate-600">
+            Click any planet on the canvas (or pick a button below) to inspect its orbit, day length, and fun facts!
+          </p>
+        </div>
+
+        <!-- View Mode Segmented Control -->
+        <div class="inline-flex p-1 bg-slate-100 rounded-2xl border border-slate-200 self-start lg:self-auto" role="group" aria-label="Simulation Zoom Mode">
+          <button id="viewFullBtn" onclick="setViewMode('full')" class="px-4 py-2 rounded-xl text-xs sm:text-sm font-bold bg-indigo-600 text-white shadow-sm transition">
+            🌌 Full Solar System View
+          </button>
+          <button id="viewInnerBtn" onclick="setViewMode('inner')" class="px-4 py-2 rounded-xl text-xs sm:text-sm font-bold text-slate-700 hover:text-slate-900 transition">
+            🔍 Inner Planets Zoom
+          </button>
+        </div>
+      </div>
+
+      <!-- Quick-Select Planet Pill Bar -->
+      <div class="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1" id="planetPillBar" aria-label="Quick select celestial body">
+        <!-- Populated dynamically via JS -->
+      </div>
+
+      <!-- Main Grid: Canvas (Left 8 cols) + Planet Inspector Card (Right 4 cols) -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
+        <!-- Simulation Canvas + Control Strip -->
+        <div class="lg:col-span-8 flex flex-col space-y-4">
+          <div class="canvas-wrapper border-2 border-slate-800 shadow-inner">
+            <canvas id="solarCanvas"></canvas>
+
+            <!-- Top-Left Live Mission Clock Overlay -->
+            <div class="absolute top-3 left-3 bg-[#060B19]/85 backdrop-blur-sm border border-indigo-400/30 text-white px-3.5 py-2 rounded-xl pointer-events-none flex items-center gap-3 text-xs">
+              <div>
+                <div class="text-[10px] uppercase tracking-wider text-indigo-300 font-bold">Earth Days Elapsed</div>
+                <div id="elapsedDaysDisplay" class="font-mono text-sm sm:text-base font-bold text-amber-300">0 Days (0.00 Yrs)</div>
+              </div>
+              <div class="h-7 w-px bg-slate-700"></div>
+              <div>
+                <div class="text-[10px] uppercase tracking-wider text-indigo-300 font-bold">Orbit Speed</div>
+                <div id="speedBadgeOverlay" class="font-mono text-sm font-bold text-emerald-300">1.0x</div>
+              </div>
+            </div>
+
+            <!-- Inner vs Outer Legend Badge (Shown when toggle is checked) -->
+            <div id="zoneLegendOverlay" class="hidden absolute bottom-3 left-3 bg-[#060B19]/90 backdrop-blur-sm border border-slate-700 text-white px-3.5 py-2 rounded-xl pointer-events-none text-[11px] space-y-1">
+              <div class="font-bold text-slate-200 uppercase tracking-wider text-[10px]">Planetary Zones</div>
+              <div class="flex items-center gap-2">
+                <span class="w-3 h-3 rounded-full bg-amber-400/30 border border-amber-400 inline-block"></span>
+                <span>Inner Zone: Rocky Terrestrial Planets</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <span class="w-3 h-3 rounded-full bg-cyan-400/30 border border-cyan-400 inline-block"></span>
+                <span>Outer Zone: Gas &amp; Ice Giants</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Simulation Controls Panel -->
+          <div class="bg-slate-50 rounded-2xl p-4 border border-slate-200 space-y-4">
+            <!-- Row 1: Play/Pause, Reset & Speed Slider -->
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div class="flex items-center gap-2.5">
+                <button id="playPauseBtn" onclick="togglePlayPause()" class="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white font-bold text-sm shadow transition flex items-center gap-2">
+                  <span id="playPauseIcon">⏸</span>
+                  <span id="playPauseText">Pause</span>
+                </button>
+                <button onclick="resetSimulation()" class="px-4 py-2.5 rounded-xl bg-white hover:bg-slate-100 active:scale-95 text-slate-800 font-bold text-sm border border-slate-300 transition flex items-center gap-1.5">
+                  <span>↺</span> Reset
+                </button>
+              </div>
+
+              <!-- Speed Slider -->
+              <div class="flex-1 max-w-md space-y-1">
+                <div class="flex justify-between items-center text-xs font-bold">
+                  <span class="text-slate-700">⏱ Simulation Speed</span>
+                  <span id="speedValueLabel" class="px-2.5 py-0.5 rounded-md bg-indigo-100 text-indigo-800">1.0x Normal</span>
+                </div>
+                <input type="range" id="speedSlider" min="0.2" max="4.0" step="0.1" value="1.0" class="w-full" />
+                <div class="flex justify-between text-[10px] font-semibold text-slate-500">
+                  <span>0.2x Slow Motion</span>
+                  <span>1.0x</span>
+                  <span>4.0x Fast Forward</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Row 2: Visual Toggle Checkboxes -->
+            <div class="pt-3 border-t border-slate-200 grid grid-cols-2 sm:grid-cols-4 gap-2.5 text-xs font-semibold text-slate-700">
+              <label class="flex items-center gap-2 bg-white px-3 py-2 rounded-xl border border-slate-200 cursor-pointer hover:border-indigo-300 select-none">
+                <input type="checkbox" id="toggleOrbits" checked class="w-4 h-4 accent-indigo-600 rounded" />
+                <span>Show Orbit Paths</span>
+              </label>
+              <label class="flex items-center gap-2 bg-white px-3 py-2 rounded-xl border border-slate-200 cursor-pointer hover:border-indigo-300 select-none">
+                <input type="checkbox" id="toggleLabels" checked class="w-4 h-4 accent-indigo-600 rounded" />
+                <span>Show Planet Labels</span>
+              </label>
+              <label class="flex items-center gap-2 bg-white px-3 py-2 rounded-xl border border-slate-200 cursor-pointer hover:border-indigo-300 select-none">
+                <input type="checkbox" id="toggleBelt" checked class="w-4 h-4 accent-indigo-600 rounded" />
+                <span>Show Asteroid Belt</span>
+              </label>
+              <label class="flex items-center gap-2 bg-white px-3 py-2 rounded-xl border border-slate-200 cursor-pointer hover:border-indigo-300 select-none">
+                <input type="checkbox" id="toggleZones" class="w-4 h-4 accent-indigo-600 rounded" />
+                <span>Inner vs. Outer Zones</span>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <!-- Adjacent Planet Inspector Card (Right 4 cols) -->
+        <aside class="lg:col-span-4 bg-slate-50 rounded-2xl p-5 border-2 border-slate-200 flex flex-col justify-between space-y-4">
+          <div class="space-y-4">
+            <div class="flex items-center justify-between">
+              <span class="text-[11px] font-bold uppercase tracking-wider text-indigo-600 bg-indigo-100 px-2.5 py-1 rounded-full">
+                Planet Inspector
+              </span>
+              <span id="inspectorCategoryBadge" class="text-[11px] font-bold px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800">
+                Rocky Terrestrial
+              </span>
+            </div>
+
+            <!-- Planet Header & Visual Swatch -->
+            <div class="flex items-center gap-4 bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
+              <div id="inspectorSwatch" class="w-16 h-16 rounded-full flex-shrink-0 shadow-inner border-2 border-slate-200 flex items-center justify-center relative">
+                <!-- Decorative ring if Saturn -->
+                <div id="inspectorSaturnRing" class="hidden absolute w-24 h-5 border-4 border-amber-200/90 rounded-full -rotate-12 pointer-events-none"></div>
+              </div>
+              <div>
+                <h3 id="inspectorName" class="text-2xl font-bold text-slate-900">Earth</h3>
+                <p id="inspectorNickname" class="text-xs font-semibold text-indigo-600">
+                  "The Blue Marble &amp; Our Home World"
+                </p>
+              </div>
+            </div>
+
+            <!-- Stats Grid -->
+            <div class="grid grid-cols-2 gap-2.5 text-xs">
+              <div class="bg-white p-3 rounded-xl border border-slate-200">
+                <div class="text-slate-500 font-semibold">Distance from Sun</div>
+                <div id="inspectorDistance" class="font-bold text-slate-900 text-sm mt-0.5">1.00 AU</div>
+                <div id="inspectorDistanceKm" class="text-[11px] text-slate-500">149.6 million km</div>
+              </div>
+
+              <div class="bg-white p-3 rounded-xl border border-slate-200">
+                <div class="text-slate-500 font-semibold">Known Moons</div>
+                <div id="inspectorMoons" class="font-bold text-slate-900 text-sm mt-0.5">1 Moon</div>
+                <div id="inspectorMoonNote" class="text-[11px] text-slate-500">Luna (our Moon!)</div>
+              </div>
+
+              <div class="bg-white p-3 rounded-xl border border-slate-200">
+                <div class="text-slate-500 font-semibold">Day Length (Rotation)</div>
+                <div id="inspectorDay" class="font-bold text-slate-900 text-sm mt-0.5">24 hours</div>
+                <div class="text-[11px] text-slate-500">1 full spin on axis</div>
+              </div>
+
+              <div class="bg-white p-3 rounded-xl border border-slate-200">
+                <div class="text-slate-500 font-semibold">Year Length (Orbit)</div>
+                <div id="inspectorYear" class="font-bold text-slate-900 text-sm mt-0.5">365.25 days</div>
+                <div class="text-[11px] text-slate-500">1 trip around Sun</div>
+              </div>
+            </div>
+
+            <!-- 6th-Grade Fun Fact Box -->
+            <div class="bg-amber-50 border-l-4 border-amber-400 rounded-r-xl p-3.5 space-y-1">
+              <div class="text-xs font-bold text-amber-900 flex items-center gap-1.5">
+                <span>💡</span> 6th-Grade Cosmic Fun Fact
+              </div>
+              <p id="inspectorFact" class="text-xs sm:text-sm text-amber-950 leading-relaxed">
+                Earth is the only planet in our solar system known to have liquid water oceans on its surface—covering about 71% of the globe!
+              </p>
+            </div>
+          </div>
+
+          <!-- Tip Footer -->
+          <div class="text-[11px] text-slate-500 text-center pt-2 border-t border-slate-200">
+            Tip: Click any planet directly in the dark space canvas to switch!
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <!-- =========================================================
+         SECTION 2: KEY SPACE CONCEPTS & GRADE 6 VOCABULARY
+         ========================================================= -->
+    <section id="vocab-section" class="space-y-5">
+      <div class="bg-white rounded-3xl p-6 sm:p-7 shadow-md border border-slate-200">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-6">
+          <div>
+            <h2 class="text-xl sm:text-2xl font-bold text-slate-900 flex items-center gap-2">
+              <span>📖</span> Key Space Concepts &amp; Grade 6 Vocabulary
+            </h2>
+            <p class="text-xs sm:text-sm text-slate-600">
+              Master these 6 core astronomy ideas using everyday comparisons!
+            </p>
+          </div>
+          <span class="text-xs font-bold bg-indigo-50 text-indigo-700 px-3 py-1.5 rounded-full self-start sm:self-auto">
+            6 Essential Terms
+          </span>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+          <!-- Card 1: Orbit & Revolution -->
+          <article class="bg-slate-50 rounded-2xl p-5 border border-slate-200 hover:border-indigo-300 transition flex flex-col justify-between space-y-3">
+            <div class="space-y-2">
+              <div class="flex items-center justify-between">
+                <span class="text-2xl">🔄</span>
+                <span class="text-[11px] font-bold uppercase tracking-wider text-indigo-700 bg-indigo-100 px-2.5 py-0.5 rounded-full">1 Year</span>
+              </div>
+              <h3 class="text-lg font-bold text-slate-900">Orbit &amp; Revolution</h3>
+              <p class="text-xs sm:text-sm text-slate-700 leading-relaxed">
+                An <strong>orbit</strong> is the curved path a planet follows around the Sun. One complete trip around the Sun is called a <strong>revolution</strong>, which equals <strong>1 year</strong> on that planet!
+              </p>
+            </div>
+            <div class="bg-white rounded-xl p-3 border border-slate-200 text-xs text-slate-600">
+              <strong>Everyday Analogy:</strong> Like running one full lap around a circular racetrack!
+            </div>
+          </article>
+
+          <!-- Card 2: Rotation & Axis -->
+          <article class="bg-slate-50 rounded-2xl p-5 border border-slate-200 hover:border-indigo-300 transition flex flex-col justify-between space-y-3">
+            <div class="space-y-2">
+              <div class="flex items-center justify-between">
+                <span class="text-2xl">🌐</span>
+                <span class="text-[11px] font-bold uppercase tracking-wider text-amber-800 bg-amber-100 px-2.5 py-0.5 rounded-full">1 Day &amp; Night</span>
+              </div>
+              <h3 class="text-lg font-bold text-slate-900">Rotation &amp; Axis</h3>
+              <p class="text-xs sm:text-sm text-slate-700 leading-relaxed">
+                <strong>Rotation</strong> is a planet spinning in place around its imaginary center line called an <strong>axis</strong>. One full spin creates <strong>day and night</strong> (24 hours on Earth).
+              </p>
+            </div>
+            <div class="bg-white rounded-xl p-3 border border-slate-200 text-xs text-slate-600">
+              <strong>Everyday Analogy:</strong> Like a basketball spinning on the tip of your finger!
+            </div>
+          </article>
+
+          <!-- Card 3: Gravity -->
+          <article class="bg-slate-50 rounded-2xl p-5 border border-slate-200 hover:border-indigo-300 transition flex flex-col justify-between space-y-3">
+            <div class="space-y-2">
+              <div class="flex items-center justify-between">
+                <span class="text-2xl">🧲</span>
+                <span class="text-[11px] font-bold uppercase tracking-wider text-rose-700 bg-rose-100 px-2.5 py-0.5 rounded-full">Cosmic Glue</span>
+              </div>
+              <h3 class="text-lg font-bold text-slate-900">Gravity</h3>
+              <p class="text-xs sm:text-sm text-slate-700 leading-relaxed">
+                <strong>Gravity</strong> is the invisible pulling force between objects with mass. Because the Sun is gigantic, its strong gravity pulls planets inward while their forward speed keeps them from crashing into it!
+              </p>
+            </div>
+            <div class="bg-white rounded-xl p-3 border border-slate-200 text-xs text-slate-600">
+              <strong>Everyday Analogy:</strong> Like swinging a ball on a string—the string (gravity) stops the ball from flying away!
+            </div>
+          </article>
+
+          <!-- Card 4: Astronomical Unit (AU) -->
+          <article class="bg-slate-50 rounded-2xl p-5 border border-slate-200 hover:border-indigo-300 transition flex flex-col justify-between space-y-3">
+            <div class="space-y-2">
+              <div class="flex items-center justify-between">
+                <span class="text-2xl">📏</span>
+                <span class="text-[11px] font-bold uppercase tracking-wider text-emerald-800 bg-emerald-100 px-2.5 py-0.5 rounded-full">Space Ruler</span>
+              </div>
+              <h3 class="text-lg font-bold text-slate-900">Astronomical Unit (AU)</h3>
+              <p class="text-xs sm:text-sm text-slate-700 leading-relaxed">
+                Space is so huge that miles and kilometers get too big to read easily! Scientists use the <strong>Astronomical Unit (AU)</strong>, where <strong>1 AU</strong> equals the average distance from Earth to the Sun (~150 million km).
+              </p>
+            </div>
+            <div class="bg-white rounded-xl p-3 border border-slate-200 text-xs text-slate-600">
+              <strong>Quick Example:</strong> Jupiter is <strong>5.2 AU</strong> away—over 5 times farther from the Sun than Earth!
+            </div>
+          </article>
+
+          <!-- Card 5: Terrestrial vs Gas & Ice Giants -->
+          <article class="bg-slate-50 rounded-2xl p-5 border border-slate-200 hover:border-indigo-300 transition flex flex-col justify-between space-y-3">
+            <div class="space-y-2">
+              <div class="flex items-center justify-between">
+                <span class="text-2xl">🪨</span>
+                <span class="text-[11px] font-bold uppercase tracking-wider text-sky-800 bg-sky-100 px-2.5 py-0.5 rounded-full">Two Planet Groups</span>
+              </div>
+              <h3 class="text-lg font-bold text-slate-900">Terrestrial vs. Giant Planets</h3>
+              <p class="text-xs sm:text-sm text-slate-700 leading-relaxed">
+                The 4 inner planets (Mercury, Venus, Earth, Mars) are small, rocky <strong>Terrestrial</strong> worlds. Beyond the Asteroid Belt live the 4 huge outer worlds: <strong>Gas Giants</strong> (Jupiter, Saturn) and <strong>Ice Giants</strong> (Uranus, Neptune).
+              </p>
+            </div>
+            <div class="bg-white rounded-xl p-3 border border-slate-200 text-xs text-slate-600">
+              <strong>Everyday Analogy:</strong> Four tiny marbles near a campfire, and four giant beach balls way out in the yard!
+            </div>
+          </article>
+
+          <!-- Card 6: Dwarf Planets, Comets & Asteroids -->
+          <article class="bg-slate-50 rounded-2xl p-5 border border-slate-200 hover:border-indigo-300 transition flex flex-col justify-between space-y-3">
+            <div class="space-y-2">
+              <div class="flex items-center justify-between">
+                <span class="text-2xl">☄️</span>
+                <span class="text-[11px] font-bold uppercase tracking-wider text-purple-800 bg-purple-100 px-2.5 py-0.5 rounded-full">Smaller Neighbors</span>
+              </div>
+              <h3 class="text-lg font-bold text-slate-900">Dwarf Planets, Asteroids &amp; Comets</h3>
+              <p class="text-xs sm:text-sm text-slate-700 leading-relaxed">
+                <strong>Asteroids</strong> are rocky leftovers mostly orbiting in the belt between Mars and Jupiter. <strong>Comets</strong> are icy "dirty snowballs" that grow glowing tails near the Sun. <strong>Dwarf planets</strong> (like Pluto) are round worlds that share their orbital neighborhood.
+              </p>
+            </div>
+            <div class="bg-white rounded-xl p-3 border border-slate-200 text-xs text-slate-600">
+              <strong>Remember:</strong> Pluto orbits in the icy <em>Kuiper Belt</em> past Neptune!
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- =========================================================
+         SECTION 3: PLANET COMPARISON QUICK TABLE
+         ========================================================= -->
+    <section id="table-section" class="bg-white rounded-3xl p-6 sm:p-7 shadow-md border border-slate-200 space-y-4">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+        <div>
+          <h2 class="text-xl sm:text-2xl font-bold text-slate-900 flex items-center gap-2">
+            <span>📊</span> Planet Comparison Quick Table
+          </h2>
+          <p class="text-xs sm:text-sm text-slate-600">
+            Compare all 8 planets side by side. Notice how year length increases as distance from the Sun grows!
+          </p>
+        </div>
+        <span class="text-xs font-semibold text-slate-500">Click any row to inspect that planet above</span>
+      </div>
+
+      <div class="overflow-x-auto rounded-2xl border border-slate-200">
+        <table class="w-full text-left border-collapse text-xs sm:text-sm">
+          <thead>
+            <tr class="bg-slate-900 text-white">
+              <th class="py-3.5 px-4 font-bold">Planet</th>
+              <th class="py-3.5 px-4 font-bold">Type</th>
+              <th class="py-3.5 px-4 font-bold">Distance (AU)</th>
+              <th class="py-3.5 px-4 font-bold">Day Length (Rotation)</th>
+              <th class="py-3.5 px-4 font-bold">Year Length (Orbit)</th>
+              <th class="py-3.5 px-4 font-bold">Moons</th>
+            </tr>
+          </thead>
+          <tbody id="planetTableBody" class="divide-y divide-slate-200 bg-white">
+            <!-- Populated dynamically via JS -->
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- =========================================================
+         SECTION 4: INTERACTIVE 5-QUESTION GRADE 6 SPACE QUIZ
+         ========================================================= -->
+    <section id="quiz-section" class="bg-white rounded-3xl p-6 sm:p-8 shadow-md border border-slate-200 space-y-6">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4">
+        <div>
+          <h2 class="text-xl sm:text-2xl font-bold text-slate-900 flex items-center gap-2">
+            <span>🏆</span> Grade 6 Solar System Mission Quiz
+          </h2>
+          <p class="text-xs sm:text-sm text-slate-600">
+            Answer all 5 questions to earn your Junior Astronaut Badge!
+          </p>
+        </div>
+
+        <div class="bg-indigo-50 border border-indigo-200 px-4 py-2 rounded-2xl self-start sm:self-auto flex items-center gap-2">
+          <span class="text-xs font-bold text-indigo-700 uppercase">Mission Score:</span>
+          <span id="quizScoreDisplay" class="font-display font-bold text-lg text-indigo-950">0 / 5</span>
+        </div>
+      </div>
+
+      <div id="quizList" class="space-y-5">
+        <!-- Populated dynamically via JS -->
+      </div>
+
+      <!-- Completion Celebration Banner -->
+      <div id="quizResultBanner" class="hidden bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-700 text-white rounded-2xl p-6 text-center space-y-2.5 shadow-lg">
+        <div class="text-3xl" id="quizResultEmoji">🚀</div>
+        <h3 class="font-display text-xl sm:text-2xl font-bold" id="quizResultTitle">Mission Complete!</h3>
+        <p class="text-xs sm:text-sm text-indigo-100 max-w-xl mx-auto" id="quizResultMessage"></p>
+        <div class="pt-2">
+          <button onclick="resetQuiz()" class="px-5 py-2.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold text-xs sm:text-sm shadow transition">
+            🔄 Try Quiz Again
+          </button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    // =========================================================================
+    // 1. SOLAR SYSTEM DATA MODEL (GRADE 6 ACCURATE & STUDENT-FRIENDLY)
+    // =========================================================================
+    const CELESTIAL_BODIES = [
+      {
+        id: 'sun',
+        name: 'Sun',
+        category: 'Star (Yellow Dwarf)',
+        badgeColor: 'bg-amber-100 text-amber-900',
+        nickname: '"The Heart of Our Solar System"',
+        color: '#FDB813',
+        secondaryColor: '#F59E0B',
+        au: 0,
+        distanceText: '0.00 AU',
+        distanceKm: 'Center of Solar System',
+        dayLength: '25.4 Earth days (at equator)',
+        yearLength: '~230 million yrs (around Milky Way)',
+        moonsText: '0 (8 Planets orbit it!)',
+        moonSub: 'Contains 99.86% of system mass',
+        orbitalPeriodDays: 0,
+        fullRadiusRatio: 0,
+        innerRadiusRatio: 0,
+        displayRadiusFull: 22,
+        displayRadiusInner: 30,
+        funFact: 'The Sun is so massive that about 1.3 million Earths could fit inside it! Its gravity holds every planet, asteroid, and comet in orbit.'
+      },
+      {
+        id: 'mercury',
+        name: 'Mercury',
+        category: 'Rocky Terrestrial',
+        badgeColor: 'bg-emerald-100 text-emerald-800',
+        nickname: '"The Speedy Sun-Scorched Neighbor"',
+        color: '#A8A29E',
+        secondaryColor: '#78716C',
+        au: 0.39,
+        distanceText: '0.39 AU',
+        distanceKm: '57.9 million km',
+        dayLength: '58.6 Earth days',
+        yearLength: '88 Earth days',
+        moonsText: '0 Moons',
+        moonSub: 'No moons or rings',
+        orbitalPeriodDays: 88,
+        fullRadiusRatio: 0.13,
+        innerRadiusRatio: 0.25,
+        displayRadiusFull: 5.5,
+        displayRadiusInner: 9,
+        funFact: 'Mercury is the fastest planet—zooming around the Sun in just 88 Earth days! Even though it is closest to the Sun, it is not the hottest planet because it has almost no atmosphere to trap heat.'
+      },
+      {
+        id: 'venus',
+        name: 'Venus',
+        category: 'Rocky Terrestrial',
+        badgeColor: 'bg-emerald-100 text-emerald-800',
+        nickname: '"Earth’s Super-Hot Twin"',
+        color: '#FBBF24',
+        secondaryColor: '#D97706',
+        au: 0.72,
+        distanceText: '0.72 AU',
+        distanceKm: '108.2 million km',
+        dayLength: '243 Earth days (spins backward!)',
+        yearLength: '225 Earth days',
+        moonsText: '0 Moons',
+        moonSub: 'Brightest planet in night sky',
+        orbitalPeriodDays: 225,
+        fullRadiusRatio: 0.20,
+        innerRadiusRatio: 0.43,
+        displayRadiusFull: 8,
+        displayRadiusInner: 14,
+        funFact: 'Venus is the hottest planet in our solar system (around 465°C / 870°F) because thick carbon dioxide clouds trap heat like a giant greenhouse—and a day on Venus is actually longer than its year!'
+      },
+      {
+        id: 'earth',
+        name: 'Earth',
+        category: 'Rocky Terrestrial',
+        badgeColor: 'bg-emerald-100 text-emerald-800',
+        nickname: '"The Blue Marble & Our Home World"',
+        color: '#3B82F6',
+        secondaryColor: '#10B981',
+        au: 1.00,
+        distanceText: '1.00 AU',
+        distanceKm: '149.6 million km',
+        dayLength: '24 hours',
+        yearLength: '365.25 days',
+        moonsText: '1 Moon',
+        moonSub: 'Luna (our Moon!)',
+        orbitalPeriodDays: 365.25,
+        fullRadiusRatio: 0.28,
+        innerRadiusRatio: 0.64,
+        displayRadiusFull: 8.5,
+        displayRadiusInner: 15,
+        hasMoon: true,
+        funFact: 'Earth is the only planet in our solar system known to have liquid water oceans on its surface—covering about 71% of the globe—and our distance from the Sun defines 1 Astronomical Unit (AU)!'
+      },
+      {
+        id: 'mars',
+        name: 'Mars',
+        category: 'Rocky Terrestrial',
+        badgeColor: 'bg-emerald-100 text-emerald-800',
+        nickname: '"The Dusty Red Planet"',
+        color: '#EF4444',
+        secondaryColor: '#B91C1C',
+        au: 1.52,
+        distanceText: '1.52 AU',
+        distanceKm: '227.9 million km',
+        dayLength: '24.6 hours',
+        yearLength: '687 Earth days',
+        moonsText: '2 Moons',
+        moonSub: 'Phobos & Deimos',
+        orbitalPeriodDays: 687,
+        fullRadiusRatio: 0.36,
+        innerRadiusRatio: 0.86,
+        displayRadiusFull: 7,
+        displayRadiusInner: 12,
+        funFact: 'Mars looks rusty red because its soil is full of iron oxide (rust)! It is home to Olympus Mons, the largest volcano in the solar system—nearly three times taller than Mount Everest.'
+      },
+      {
+        id: 'jupiter',
+        name: 'Jupiter',
+        category: 'Gas Giant',
+        badgeColor: 'bg-sky-100 text-sky-800',
+        nickname: '"The King of the Planets"',
+        color: '#F59E0B',
+        secondaryColor: '#B45309',
+        au: 5.20,
+        distanceText: '5.20 AU',
+        distanceKm: '778.5 million km',
+        dayLength: '9.9 hours (fastest spin!)',
+        yearLength: '11.9 Earth years',
+        moonsText: '95 Moons',
+        moonSub: 'Includes Io, Europa, Ganymede',
+        orbitalPeriodDays: 4333,
+        fullRadiusRatio: 0.54,
+        innerRadiusRatio: 1.35,
+        displayRadiusFull: 17,
+        displayRadiusInner: 24,
+        isStriped: true,
+        funFact: 'Jupiter is the largest planet in our solar system—more than twice as massive as all the other planets combined! Its famous Great Red Spot is a giant storm wider than Earth.'
+      },
+      {
+        id: 'saturn',
+        name: 'Saturn',
+        category: 'Gas Giant',
+        badgeColor: 'bg-sky-100 text-sky-800',
+        nickname: '"The Jewel of the Solar System"',
+        color: '#FDE68A',
+        secondaryColor: '#D97706',
+        au: 9.58,
+        distanceText: '9.58 AU',
+        distanceKm: '1.43 billion km',
+        dayLength: '10.7 hours',
+        yearLength: '29.5 Earth years',
+        moonsText: '146 Moons',
+        moonSub: 'Titan is larger than Mercury!',
+        orbitalPeriodDays: 10759,
+        fullRadiusRatio: 0.69,
+        innerRadiusRatio: 1.65,
+        displayRadiusFull: 14.5,
+        displayRadiusInner: 20,
+        hasRings: true,
+        funFact: 'Saturn is famous for its dazzling rings made of billions of chunks of ice and rock. Even though Saturn is gigantic, it is mostly made of light gases—so it is less dense than water!'
+      },
+      {
+        id: 'uranus',
+        name: 'Uranus',
+        category: 'Ice Giant',
+        badgeColor: 'bg-cyan-100 text-cyan-800',
+        nickname: '"The Sideways Ice Giant"',
+        color: '#67E8F9',
+        secondaryColor: '#06B6D4',
+        au: 19.2,
+        distanceText: '19.2 AU',
+        distanceKm: '2.87 billion km',
+        dayLength: '17.2 hours',
+        yearLength: '84 Earth years',
+        moonsText: '28 Moons',
+        moonSub: 'Named after literary characters',
+        orbitalPeriodDays: 30687,
+        fullRadiusRatio: 0.83,
+        innerRadiusRatio: 1.95,
+        displayRadiusFull: 11.5,
+        displayRadiusInner: 16,
+        funFact: 'Uranus is tilted completely on its side (at a 98-degree angle), so it rolls around the Sun like a bowling ball! Methane gas in its upper atmosphere gives it a pale blue-green color.'
+      },
+      {
+        id: 'neptune',
+        name: 'Neptune',
+        category: 'Ice Giant',
+        badgeColor: 'bg-cyan-100 text-cyan-800',
+        nickname: '"The Windy Deep-Blue Frontier"',
+        color: '#3B82F6',
+        secondaryColor: '#1D4ED8',
+        au: 30.1,
+        distanceText: '30.1 AU',
+        distanceKm: '4.50 billion km',
+        dayLength: '16.1 hours',
+        yearLength: '164.8 Earth years',
+        moonsText: '16 Moons',
+        moonSub: 'Triton orbits backward!',
+        orbitalPeriodDays: 60190,
+        fullRadiusRatio: 0.95,
+        innerRadiusRatio: 2.25,
+        displayRadiusFull: 11,
+        displayRadiusInner: 15,
+        funFact: 'Neptune is over 30 times farther from the Sun than Earth and has the strongest supersonic winds in the solar system—blowing faster than 2,000 km/h (1,200 mph)!'
+      }
+    ];
+
+    // =========================================================================
+    // 2. SIMULATION STATE & CANVAS SETUP
+    // =========================================================================
+    const canvas = document.getElementById('solarCanvas');
+    const ctx = canvas.getContext('2d');
+
+    let simState = {
+      isPlaying: true,
+      speedMultiplier: 1.0,
+      elapsedEarthDays: 0,
+      selectedId: 'earth',
+      viewMode: 'full', // 'full' or 'inner'
+      showOrbits: true,
+      showLabels: true,
+      showBelt: true,
+      showZones: false,
+      lastTimestamp: null,
+      planetScreenCoords: [] // Stores { id, x, y, hitRadius } for click detection
+    };
+
+    // Initial aesthetically balanced starting angles (radians)
+    const initialAngles = {
+      mercury: 0.6,
+      venus: 2.3,
+      earth: 5.5,
+      mars: 1.4,
+      jupiter: 3.9,
+      saturn: 0.3,
+      uranus: 4.6,
+      neptune: 2.8
+    };
+
+    let currentAngles = { ...initialAngles };
+    let moonAngle = 0;
+
+    // Pre-generate background stars & asteroid belt particles so they stay crisp & steady
+    const backgroundStars = Array.from({ length: 140 }, () => ({
+      xNorm: Math.random(),
+      yNorm: Math.random(),
+      size: Math.random() * 1.6 + 0.4,
+      alpha: Math.random() * 0.65 + 0.25,
+      twinkleSpeed: Math.random() * 2 + 1
+    }));
+
+    const asteroids = Array.from({ length: 150 }, () => ({
+      angle: Math.random() * Math.PI * 2,
+      offsetRatio: (Math.random() - 0.5) * 0.065, // Spread around 0.45 full radius ratio
+      size: Math.random() * 1.7 + 0.7,
+      speedFactor: 0.85 + Math.random() * 0.3,
+      shade: Math.random() > 0.5 ? '#94a3b8' : '#cbd5e1'
+    }));
+
+    function resizeCanvas() {
+      const rect = canvas.parentElement.getBoundingClientRect();
+      const dpr = window.devicePixelRatio || 1;
+      canvas.width = rect.width * dpr;
+      canvas.height = rect.height * dpr;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    }
+
+    window.addEventListener('resize', resizeCanvas);
+
+    // =========================================================================
+    // 3. UI CONTROLS & PLANET INSPECTOR BINDINGS
+    // =========================================================================
+    function buildPlanetPillBar() {
+      const bar = document.getElementById('planetPillBar');
+      bar.innerHTML = CELESTIAL_BODIES.map((body) => {
+        const isSelected = body.id === simState.selectedId;
+        return `
+          <button
+            onclick="selectPlanet('${body.id}')"
+            id="pill-${body.id}"
+            class="flex-shrink-0 inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold border transition ${
+              isSelected
+                ? 'bg-slate-900 text-white border-slate-900 shadow-sm'
+                : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
+            }"
+          >
+            <span class="w-3 h-3 rounded-full inline-block border border-black/15" style="background-color: ${body.color};"></span>
+            <span>${body.name}</span>
+          </button>
+        `;
+      }).join('');
+    }
+
+    function buildComparisonTable() {
+      const tbody = document.getElementById('planetTableBody');
+      const planetsOnly = CELESTIAL_BODIES.filter((b) => b.id !== 'sun');
+      tbody.innerHTML = planetsOnly
+        .map((p) => {
+          return `
+            <tr onclick="selectPlanet('${p.id}'); document.getElementById('sim-section').scrollIntoView({behavior: 'smooth'});" class="hover:bg-indigo-50/70 cursor-pointer transition">
+              <td class="py-3 px-4 font-bold text-slate-900 flex items-center gap-2.5">
+                <span class="w-3.5 h-3.5 rounded-full inline-block flex-shrink-0 border border-black/10" style="background-color: ${p.color};"></span>
+                <span>${p.name}</span>
+              </td>
+              <td class="py-3 px-4">
+                <span class="text-[11px] font-bold px-2.5 py-0.5 rounded-full ${p.badgeColor}">${p.category}</span>
+              </td>
+              <td class="py-3 px-4 font-mono font-semibold text-slate-800">${p.distanceText}</td>
+              <td class="py-3 px-4 text-slate-700">${p.dayLength}</td>
+              <td class="py-3 px-4 font-semibold text-slate-800">${p.yearLength}</td>
+              <td class="py-3 px-4 text-slate-700">${p.moonsText}</td>
+            </tr>
+          `;
+        })
+        .join('');
+    }
+
+    function selectPlanet(id) {
+      simState.selectedId = id;
+      const body = CELESTIAL_BODIES.find((b) => b.id === id) || CELESTIAL_BODIES[3];
+
+      // Update pill bar active styles
+      CELESTIAL_BODIES.forEach((b) => {
+        const pill = document.getElementById(`pill-${b.id}`);
+        if (!pill) return;
+        if (b.id === id) {
+          pill.className =
+            'flex-shrink-0 inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold border transition bg-slate-900 text-white border-slate-900 shadow-sm';
+        } else {
+          pill.className =
+            'flex-shrink-0 inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold border transition bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100';
+        }
+      });
+
+      // Populate Inspector Card
+      document.getElementById('inspectorName').textContent = body.name;
+      document.getElementById('inspectorNickname').textContent = body.nickname;
+      const badge = document.getElementById('inspectorCategoryBadge');
+      badge.textContent = body.category;
+      badge.className = `text-[11px] font-bold px-2.5 py-1 rounded-full ${body.badgeColor}`;
+
+      const swatch = document.getElementById('inspectorSwatch');
+      swatch.style.background = `radial-gradient(circle at 30% 30%, ${body.color}, ${body.secondaryColor})`;
+      const ringEl = document.getElementById('inspectorSaturnRing');
+      if (body.hasRings) {
+        ringEl.classList.remove('hidden');
+      } else {
+        ringEl.classList.add('hidden');
+      }
+
+      document.getElementById('inspectorDistance').textContent = body.distanceText;
+      document.getElementById('inspectorDistanceKm').textContent = body.distanceKm;
+      document.getElementById('inspectorMoons').textContent = body.moonsText;
+      document.getElementById('inspectorMoonNote').textContent = body.moonSub;
+      document.getElementById('inspectorDay').textContent = body.dayLength;
+      document.getElementById('inspectorYear').textContent = body.yearLength;
+      document.getElementById('inspectorFact').textContent = body.funFact;
+    }
+
+    function setViewMode(mode) {
+      simState.viewMode = mode;
+      const fullBtn = document.getElementById('viewFullBtn');
+      const innerBtn = document.getElementById('viewInnerBtn');
+
+      if (mode === 'full') {
+        fullBtn.className = 'px-4 py-2 rounded-xl text-xs sm:text-sm font-bold bg-indigo-600 text-white shadow-sm transition';
+        innerBtn.className = 'px-4 py-2 rounded-xl text-xs sm:text-sm font-bold text-slate-700 hover:text-slate-900 transition';
+      } else {
+        innerBtn.className = 'px-4 py-2 rounded-xl text-xs sm:text-sm font-bold bg-indigo-600 text-white shadow-sm transition';
+        fullBtn.className = 'px-4 py-2 rounded-xl text-xs sm:text-sm font-bold text-slate-700 hover:text-slate-900 transition';
+      }
+    }
+
+    function togglePlayPause() {
+      simState.isPlaying = !simState.isPlaying;
+      document.getElementById('playPauseIcon').textContent = simState.isPlaying ? '⏸' : '▶';
+      document.getElementById('playPauseText').textContent = simState.isPlaying ? 'Pause' : 'Play';
+      if (simState.isPlaying) {
+        simState.lastTimestamp = performance.now();
+      }
+    }
+
+    function resetSimulation() {
+      simState.elapsedEarthDays = 0;
+      currentAngles = { ...initialAngles };
+      moonAngle = 0;
+      updateClockOverlay();
+    }
+
+    function updateClockOverlay() {
+      const days = Math.floor(simState.elapsedEarthDays);
+      const years = (simState.elapsedEarthDays / 365.25).toFixed(2);
+      document.getElementById('elapsedDaysDisplay').textContent = `${days.toLocaleString()} Days (${years} Yrs)`;
+    }
+
+    // Event listeners for sliders & toggles
+    document.getElementById('speedSlider').addEventListener('input', (e) => {
+      simState.speedMultiplier = parseFloat(e.target.value);
+      const label = `${simState.speedMultiplier.toFixed(1)}x`;
+      document.getElementById('speedValueLabel').textContent =
+        simState.speedMultiplier === 1 ? '1.0x Normal' : `${label}`;
+      document.getElementById('speedBadgeOverlay').textContent = label;
+    });
+
+    document.getElementById('toggleOrbits').addEventListener('change', (e) => {
+      simState.showOrbits = e.target.checked;
+    });
+    document.getElementById('toggleLabels').addEventListener('change', (e) => {
+      simState.showLabels = e.target.checked;
+    });
+    document.getElementById('toggleBelt').addEventListener('change', (e) => {
+      simState.showBelt = e.target.checked;
+    });
+    document.getElementById('toggleZones').addEventListener('change', (e) => {
+      simState.showZones = e.target.checked;
+      const legend = document.getElementById('zoneLegendOverlay');
+      if (simState.showZones) {
+        legend.classList.remove('hidden');
+      } else {
+        legend.classList.add('hidden');
+      }
+    });
+
+    // Click detection on canvas
+    canvas.addEventListener('click', (e) => {
+      const rect = canvas.getBoundingClientRect();
+      const clickX = e.clientX - rect.left;
+      const clickY = e.clientY - rect.top;
+
+      // Check closest planet within generous tap radius
+      let closestId = null;
+      let closestDist = Infinity;
+
+      for (const item of simState.planetScreenCoords) {
+        const dist = Math.hypot(clickX - item.x, clickY - item.y);
+        if (dist <= item.hitRadius && dist < closestDist) {
+          closestDist = dist;
+          closestId = item.id;
+        }
+      }
+
+      if (closestId) {
+        selectPlanet(closestId);
+      }
+    });
+
+    // Hover pointer cursor feedback
+    canvas.addEventListener('mousemove', (e) => {
+      const rect = canvas.getBoundingClientRect();
+      const mx = e.clientX - rect.left;
+      const my = e.clientY - rect.top;
+      const hovering = simState.planetScreenCoords.some(
+        (item) => Math.hypot(mx - item.x, my - item.y) <= item.hitRadius
+      );
+      canvas.style.cursor = hovering ? 'pointer' : 'default';
+    });
+
+    // =========================================================================
+    // 4. CANVAS RENDERING ENGINE (60FPS)
+    // =========================================================================
+    function renderSolarSystem(width, height, timeSec) {
+      ctx.clearRect(0, 0, width, height);
+
+      // Deep Cosmic Midnight Background
+      const bgGrad = ctx.createRadialGradient(
+        width / 2,
+        height / 2,
+        20,
+        width / 2,
+        height / 2,
+        Math.max(width, height) * 0.7
+      );
+      bgGrad.addColorStop(0, '#0f172a');
+      bgGrad.addColorStop(0.55, '#060B19');
+      bgGrad.addColorStop(1, '#030610');
+      ctx.fillStyle = bgGrad;
+      ctx.fillRect(0, 0, width, height);
+
+      // Draw Twinkling Background Stars
+      for (const star of backgroundStars) {
+        const sx = star.xNorm * width;
+        const sy = star.yNorm * height;
+        const twinkle = 0.7 + 0.3 * Math.sin(timeSec * star.twinkleSpeed + sx);
+        ctx.fillStyle = `rgba(255, 255, 255, ${star.alpha * twinkle})`;
+        ctx.beginPath();
+        ctx.arc(sx, sy, star.size, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      const cx = width / 2;
+      const cy = height / 2;
+      const maxOrbitRadius = Math.min(width, height) * 0.45;
+      const isInnerZoom = simState.viewMode === 'inner';
+
+      // Optional Highlight: Inner Rocky Zone vs Outer Giant Zone
+      if (simState.showZones) {
+        const innerBoundary = maxOrbitRadius * (isInnerZoom ? 0.94 : 0.41);
+        const outerBoundary = maxOrbitRadius * 0.98;
+
+        if (!isInnerZoom) {
+          // Outer Giants Zone Ring
+          ctx.save();
+          ctx.beginPath();
+          ctx.arc(cx, cy, outerBoundary, 0, Math.PI * 2);
+          ctx.arc(cx, cy, maxOrbitRadius * 0.49, 0, Math.PI * 2, true);
+          ctx.fillStyle = 'rgba(34, 211, 238, 0.08)';
+          ctx.fill();
+          ctx.restore();
+        }
+
+        // Inner Rocky Zone Disk
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(cx, cy, innerBoundary, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(251, 191, 36, 0.09)';
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(251, 191, 36, 0.35)';
+        ctx.setLineDash([6, 6]);
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+        ctx.restore();
+      }
+
+      // Draw Asteroid Belt (between Mars at 0.36 and Jupiter at 0.54 -> ~0.45)
+      if (simState.showBelt) {
+        const beltCenterRatio = isInnerZoom ? 1.05 : 0.45;
+        const beltRadius = maxOrbitRadius * beltCenterRatio;
+        if (beltRadius < Math.max(width, height) * 0.8) {
+          ctx.save();
+          for (const rock of asteroids) {
+            const r = maxOrbitRadius * (beltCenterRatio + rock.offsetRatio);
+            const ax = cx + Math.cos(rock.angle) * r;
+            const ay = cy + Math.sin(rock.angle) * r;
+            ctx.fillStyle = rock.shade;
+            ctx.globalAlpha = 0.65;
+            ctx.beginPath();
+            ctx.arc(ax, ay, rock.size, 0, Math.PI * 2);
+            ctx.fill();
+          }
+          ctx.restore();
+
+          if (simState.showLabels && !isInnerZoom) {
+            ctx.save();
+            ctx.fillStyle = 'rgba(148, 163, 184, 0.75)';
+            ctx.font = '600 10px Inter, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText('ASTEROID BELT', cx, cy - beltRadius - 6);
+            ctx.restore();
+          }
+        }
+      }
+
+      // Reset clickable coordinate list for this frame
+      simState.planetScreenCoords = [];
+
+      // Draw Sun at Center
+      const sunBody = CELESTIAL_BODIES[0];
+      const sunRadius = isInnerZoom ? sunBody.displayRadiusInner : sunBody.displayRadiusFull;
+
+      // Sun Corona Glow
+      const coronaGrad = ctx.createRadialGradient(cx, cy, sunRadius * 0.4, cx, cy, sunRadius * 2.8);
+      coronaGrad.addColorStop(0, 'rgba(253, 184, 19, 0.95)');
+      coronaGrad.addColorStop(0.45, 'rgba(245, 158, 11, 0.35)');
+      coronaGrad.addColorStop(1, 'rgba(245, 158, 11, 0)');
+      ctx.fillStyle = coronaGrad;
+      ctx.beginPath();
+      ctx.arc(cx, cy, sunRadius * 2.8, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Sun Core
+      const sunCoreGrad = ctx.createRadialGradient(
+        cx - sunRadius * 0.25,
+        cy - sunRadius * 0.25,
+        2,
+        cx,
+        cy,
+        sunRadius
+      );
+      sunCoreGrad.addColorStop(0, '#FEF08A');
+      sunCoreGrad.addColorStop(0.6, '#FDB813');
+      sunCoreGrad.addColorStop(1, '#EA580C');
+      ctx.fillStyle = sunCoreGrad;
+      ctx.beginPath();
+      ctx.arc(cx, cy, sunRadius, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Selection Ring around Sun if selected
+      if (simState.selectedId === 'sun') {
+        drawSelectionRing(cx, cy, sunRadius + 8);
+      }
+
+      if (simState.showLabels) {
+        ctx.fillStyle = '#FDE68A';
+        ctx.font = '700 11px Inter, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('Sun', cx, cy + sunRadius + 14);
+      }
+
+      simState.planetScreenCoords.push({
+        id: 'sun',
+        x: cx,
+        y: cy,
+        hitRadius: Math.max(24, sunRadius + 10)
+      });
+
+      // Draw Each of the 8 Planets
+      for (let i = 1; i < CELESTIAL_BODIES.length; i++) {
+        const planet = CELESTIAL_BODIES[i];
+        const ratio = isInnerZoom ? planet.innerRadiusRatio : planet.fullRadiusRatio;
+        const orbitR = maxOrbitRadius * ratio;
+
+        // Skip outer giants when zoomed closely into inner rocky planets
+        if (isInnerZoom && orbitR > Math.max(width, height) * 0.75) {
+          continue;
+        }
+
+        // Orbit Path Circle
+        if (simState.showOrbits) {
+          ctx.save();
+          ctx.strokeStyle =
+            simState.selectedId === planet.id
+              ? 'rgba(129, 140, 248, 0.7)'
+              : 'rgba(148, 163, 184, 0.24)';
+          ctx.lineWidth = simState.selectedId === planet.id ? 2 : 1.1;
+          ctx.beginPath();
+          ctx.arc(cx, cy, orbitR, 0, Math.PI * 2);
+          ctx.stroke();
+          ctx.restore();
+        }
+
+        const angle = currentAngles[planet.id];
+        const px = cx + Math.cos(angle) * orbitR;
+        const py = cy + Math.sin(angle) * orbitR;
+        const pRadius = isInnerZoom ? planet.displayRadiusInner : planet.displayRadiusFull;
+
+        // Draw Saturn's Rings (Back half & front tilted ellipse)
+        if (planet.hasRings) {
+          ctx.save();
+          ctx.translate(px, py);
+          ctx.rotate(-0.32);
+          ctx.strokeStyle = 'rgba(253, 230, 138, 0.78)';
+          ctx.lineWidth = isInnerZoom ? 5 : 3.5;
+          ctx.beginPath();
+          ctx.ellipse(0, 0, pRadius * 2.15, pRadius * 0.65, 0, 0, Math.PI * 2);
+          ctx.stroke();
+
+          ctx.strokeStyle = 'rgba(217, 119, 6, 0.45)';
+          ctx.lineWidth = isInnerZoom ? 2.5 : 1.5;
+          ctx.beginPath();
+          ctx.ellipse(0, 0, pRadius * 1.65, pRadius * 0.48, 0, 0, Math.PI * 2);
+          ctx.stroke();
+          ctx.restore();
+        }
+
+        // Planet Sphere with 3D Shading
+        const pGrad = ctx.createRadialGradient(
+          px - pRadius * 0.3,
+          py - pRadius * 0.3,
+          1,
+          px,
+          py,
+          pRadius
+        );
+        pGrad.addColorStop(0, planet.color);
+        pGrad.addColorStop(1, planet.secondaryColor);
+
+        ctx.fillStyle = pGrad;
+        ctx.beginPath();
+        ctx.arc(px, py, pRadius, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Subtle Jupiter Cloud Bands
+        if (planet.isStriped) {
+          ctx.save();
+          ctx.beginPath();
+          ctx.arc(px, py, pRadius, 0, Math.PI * 2);
+          ctx.clip();
+          ctx.fillStyle = 'rgba(120, 53, 15, 0.32)';
+          ctx.fillRect(px - pRadius, py - pRadius * 0.45, pRadius * 2, pRadius * 0.25);
+          ctx.fillRect(px - pRadius, py + pRadius * 0.18, pRadius * 2, pRadius * 0.25);
+          ctx.restore();
+        }
+
+        // Earth's Orbiting Moon!
+        if (planet.hasMoon) {
+          const moonOrbitR = pRadius + (isInnerZoom ? 14 : 8);
+          const mx = px + Math.cos(moonAngle) * moonOrbitR;
+          const my = py + Math.sin(moonAngle) * moonOrbitR;
+          const moonR = isInnerZoom ? 3.5 : 2.2;
+
+          if (simState.showOrbits && isInnerZoom) {
+            ctx.strokeStyle = 'rgba(203, 213, 225, 0.3)';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.arc(px, py, moonOrbitR, 0, Math.PI * 2);
+            ctx.stroke();
+          }
+
+          ctx.fillStyle = '#E2E8F0';
+          ctx.beginPath();
+          ctx.arc(mx, my, moonR, 0, Math.PI * 2);
+          ctx.fill();
+
+          if (simState.showLabels && isInnerZoom) {
+            ctx.fillStyle = '#CBD5E1';
+            ctx.font = '600 9px Inter, sans-serif';
+            ctx.textAlign = 'left';
+            ctx.fillText('Moon', mx + 5, my + 3);
+          }
+        }
+
+        // Highlight Ring if Selected
+        if (simState.selectedId === planet.id) {
+          drawSelectionRing(px, py, pRadius + (planet.hasRings ? 12 : 6));
+        }
+
+        // Planet Label
+        if (simState.showLabels) {
+          ctx.fillStyle = simState.selectedId === planet.id ? '#FDE047' : '#F8FAFC';
+          ctx.font = simState.selectedId === planet.id ? '700 12px Inter, sans-serif' : '600 11px Inter, sans-serif';
+          ctx.textAlign = 'center';
+          ctx.fillText(planet.name, px, py + pRadius + 14);
+        }
+
+        // Store screen position for mouse/touch selection
+        simState.planetScreenCoords.push({
+          id: planet.id,
+          x: px,
+          y: py,
+          hitRadius: Math.max(22, pRadius + 12)
+        });
+      }
+    }
+
+    function drawSelectionRing(x, y, radius) {
+      ctx.save();
+      ctx.strokeStyle = '#FACC15';
+      ctx.lineWidth = 2;
+      ctx.setLineDash([5, 4]);
+      ctx.beginPath();
+      ctx.arc(x, y, radius, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    // =========================================================================
+    // 5. MAIN ANIMATION LOOP
+    // =========================================================================
+    function animate(timestamp) {
+      if (!simState.lastTimestamp) simState.lastTimestamp = timestamp;
+      const dt = Math.min(0.05, (timestamp - simState.lastTimestamp) / 1000);
+      simState.lastTimestamp = timestamp;
+
+      if (simState.isPlaying) {
+        // Base rate: 1.0x speed = 45 Earth days per real second (smooth visual pacing)
+        const earthDaysDelta = dt * 45 * simState.speedMultiplier;
+        simState.elapsedEarthDays += earthDaysDelta;
+
+        // Advance each planet proportionally to 1 / orbitalPeriodDays
+        for (let i = 1; i < CELESTIAL_BODIES.length; i++) {
+          const planet = CELESTIAL_BODIES[i];
+          const angularVel = (Math.PI * 2) / planet.orbitalPeriodDays;
+          currentAngles[planet.id] = (currentAngles[planet.id] + angularVel * earthDaysDelta) % (Math.PI * 2);
+        }
+
+        // Advance Earth's Moon (27.3 day lunar period)
+        moonAngle = (moonAngle + ((Math.PI * 2) / 27.3) * earthDaysDelta) % (Math.PI * 2);
+
+        // Gently rotate asteroid belt
+        for (const rock of asteroids) {
+          rock.angle = (rock.angle + 0.0008 * rock.speedFactor * earthDaysDelta) % (Math.PI * 2);
+        }
+
+        updateClockOverlay();
+      }
+
+      renderSolarSystem(canvas.clientWidth, canvas.clientHeight, timestamp / 1000);
+      requestAnimationFrame(animate);
+    }
+
+    // =========================================================================
+    // 6. INTERACTIVE 5-QUESTION GRADE 6 SPACE QUIZ
+    // =========================================================================
+    const QUIZ_QUESTIONS = [
+      {
+        question: '1. What causes Earth to experience day and night every 24 hours?',
+        options: [
+          'A) Earth revolving all the way around the Sun',
+          'B) Earth spinning (rotating) once on its axis',
+          'C) The Moon blocking sunlight every evening',
+          'D) The Asteroid Belt passing between Earth and the Sun'
+        ],
+        correctIndex: 1,
+        explanation: 'Rotation is Earth spinning like a top on its axis! One full rotation takes 24 hours and creates day and night.'
+      },
+      {
+        question: '2. Which invisible force acts like a "cosmic leash" to keep all 8 planets in orbit around the Sun?',
+        options: [
+          'A) Magnetism from Earth’s North Pole',
+          'B) Solar wind pushing planets outward',
+          'C) The Sun’s strong gravity',
+          'D) Friction from outer space air'
+        ],
+        correctIndex: 2,
+        explanation: 'The Sun contains 99.86% of our solar system’s mass, so its powerful gravity pulls planets inward while their forward motion keeps them orbiting!'
+      },
+      {
+        question: '3. Where is the main Asteroid Belt located in our solar system?',
+        options: [
+          'A) Between Mercury and Venus',
+          'B) Between Earth and the Moon',
+          'C) Between Mars and Jupiter',
+          'D) Beyond Neptune and Pluto'
+        ],
+        correctIndex: 2,
+        explanation: 'The Asteroid Belt orbits between Mars and Jupiter, separating the 4 rocky inner planets from the 4 giant outer planets!'
+      },
+      {
+        question: '4. What does 1 Astronomical Unit (1 AU) measure?',
+        options: [
+          'A) The average distance from Earth to the Sun',
+          'B) The width of Jupiter’s Great Red Spot',
+          'C) The time it takes light to cross the Milky Way',
+          'D) The distance from Earth to the Moon'
+        ],
+        correctIndex: 0,
+        explanation: '1 AU (~150 million km) is the average distance between Earth and the Sun—a super helpful space ruler for measuring planetary distances!'
+      },
+      {
+        question: '5. Which statement best compares the Inner Planets and the Outer Planets?',
+        options: [
+          'A) Inner planets are huge gas worlds; outer planets are tiny rocky worlds',
+          'B) Inner planets are small rocky worlds with shorter years; outer planets are huge gas/ice giants with much longer years',
+          'C) Both inner and outer planets take 365 days to orbit the Sun',
+          'D) Only inner planets have moons'
+        ],
+        correctIndex: 1,
+        explanation: 'Mercury, Venus, Earth, and Mars are small rocky terrestrial worlds close to the Sun, while Jupiter, Saturn, Uranus, and Neptune are massive giants with decades-long years!'
+      }
+    ];
+
+    let quizAnswered = new Array(QUIZ_QUESTIONS.length).fill(false);
+    let quizScore = 0;
+
+    function renderQuiz() {
+      const container = document.getElementById('quizList');
+      container.innerHTML = QUIZ_QUESTIONS.map((q, qIdx) => {
+        const optionsHtml = q.options
+          .map(
+            (opt, oIdx) => `
+            <button
+              onclick="handleQuizAnswer(${qIdx}, ${oIdx})"
+              id="q-${qIdx}-opt-${oIdx}"
+              class="w-full text-left px-4 py-3 rounded-xl bg-white border-2 border-slate-200 hover:border-indigo-400 text-xs sm:text-sm font-semibold text-slate-800 transition"
+            >
+              ${opt}
+            </button>
+          `
+          )
+          .join('');
+
+        return `
+          <div class="bg-slate-50 rounded-2xl p-5 border border-slate-200 space-y-3">
+            <p class="font-bold text-slate-900 text-sm sm:text-base">${q.question}</p>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-2.5">
+              ${optionsHtml}
+            </div>
+            <div id="q-feedback-${qIdx}" class="hidden text-xs sm:text-sm p-3.5 rounded-xl font-medium"></div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function handleQuizAnswer(qIdx, selectedOptIdx) {
+      if (quizAnswered[qIdx]) return;
+      quizAnswered[qIdx] = true;
+
+      const qData = QUIZ_QUESTIONS[qIdx];
+      const isCorrect = selectedOptIdx === qData.correctIndex;
+
+      // Style all option buttons for this question
+      qData.options.forEach((_, idx) => {
+        const btn = document.getElementById(`q-${qIdx}-opt-${idx}`);
+        btn.disabled = true;
+        btn.classList.remove('hover:border-indigo-400');
+
+        if (idx === qData.correctIndex) {
+          btn.className =
+            'w-full text-left px-4 py-3 rounded-xl bg-emerald-50 border-2 border-emerald-500 text-emerald-950 text-xs sm:text-sm font-bold';
+        } else if (idx === selectedOptIdx && !isCorrect) {
+          btn.className =
+            'w-full text-left px-4 py-3 rounded-xl bg-rose-50 border-2 border-rose-500 text-rose-950 text-xs sm:text-sm font-bold';
+        } else {
+          btn.className =
+            'w-full text-left px-4 py-3 rounded-xl bg-white border-2 border-slate-200 text-slate-400 text-xs sm:text-sm font-semibold opacity-70';
+        }
+      });
+
+      const feedbackEl = document.getElementById(`q-feedback-${qIdx}`);
+      if (isCorrect) {
+        quizScore++;
+        feedbackEl.className =
+          'text-xs sm:text-sm p-3.5 rounded-xl font-medium bg-emerald-100 text-emerald-950 border border-emerald-300';
+        feedbackEl.textContent = `✅ Correct! ${qData.explanation}`;
+      } else {
+        feedbackEl.className =
+          'text-xs sm:text-sm p-3.5 rounded-xl font-medium bg-rose-100 text-rose-950 border border-rose-300';
+        feedbackEl.textContent = `❌ Not quite! ${qData.explanation}`;
+      }
+      feedbackEl.classList.remove('hidden');
+
+      document.getElementById('quizScoreDisplay').textContent = `${quizScore} / ${QUIZ_QUESTIONS.length}`;
+
+      // Check if all 5 questions are completed
+      if (quizAnswered.every(Boolean)) {
+        const banner = document.getElementById('quizResultBanner');
+        const emoji = document.getElementById('quizResultEmoji');
+        const title = document.getElementById('quizResultTitle');
+        const msg = document.getElementById('quizResultMessage');
+
+        banner.classList.remove('hidden');
+        if (quizScore === 5) {
+          emoji.textContent = '🌟🚀🏆';
+          title.textContent = '5 / 5 — Master Space Explorer!';
+          msg.textContent =
+            'Incredible work! You aced every single astronomy concept from rotation and gravity to the Asteroid Belt and AU distances!';
+        } else if (quizScore >= 3) {
+          emoji.textContent = '🪐✨';
+          title.textContent = `${quizScore} / 5 — Junior Astronaut!`;
+          msg.textContent =
+            'Great job exploring the solar system! Review the explanations above or experiment with the simulation to aim for 5/5!';
+        } else {
+          emoji.textContent = '🔭💫';
+          title.textContent = `${quizScore} / 5 — Space Cadet in Training!`;
+          msg.textContent =
+            'Nice start! Read through the Space Terms cards above and test the simulation controls, then try the quiz again.';
+        }
+      }
+    }
+
+    function resetQuiz() {
+      quizAnswered = new Array(QUIZ_QUESTIONS.length).fill(false);
+      quizScore = 0;
+      document.getElementById('quizScoreDisplay').textContent = `0 / ${QUIZ_QUESTIONS.length}`;
+      document.getElementById('quizResultBanner').classList.add('hidden');
+      renderQuiz();
+    }
+
+    // =========================================================================
+    // 7. INITIALIZE APPLICATION ON WINDOW LOAD
+    // =========================================================================
+    window.onload = function () {
+      resizeCanvas();
+      buildPlanetPillBar();
+      buildComparisonTable();
+      selectPlanet('earth');
+      renderQuiz();
+      requestAnimationFrame(animate);
+    };
+  </script>
+</body>
+</html>
+```
